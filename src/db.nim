@@ -1,5 +1,5 @@
 
-import jsffi, async, json, Tables
+import jsffi, async, json, Tables, sugar
 
 
 type
@@ -14,7 +14,9 @@ type
     username*: string
     password*: string
     skip_setup*: bool
-    
+
+var console {. importc, nodecl .}: JsObject
+
 proc optTojs(o: PouchOptions): JsObject =
   result = newJsObject()
   result.skip_setup = o.skip_setup
@@ -36,29 +38,14 @@ proc optTojs(o: PouchOptions): JsObject =
 proc newPouchDB(name: cstring, options: JsObject): JsObject {.importcpp: "new PouchDB(#, #)".}
 proc newPouchDB(name: cstring): JsObject {.importcpp: "new PouchDB(#)".}
 
-#proc info(db:PouchDB, cb:Callback){.importcpp:"#.info(#)".}
-#proc log()
-#var console {. importc, nodecl .}: JsObject
-
-# #proc info*(db: JsObject): Future[JsObject] {.async, importcpp:"#.info()".}
-
-# console.log("starting IMU")
-
-# let db {.exportc.} = newPouchDB(cstring"myDB") 
-# #echo "DB: " & db
-# console.log("DB: ", db)
-
-# db.info().then(proc(r: JsObject ) = console.log("DB_Info:", r))
-
-# # db.info(proc(err, info: string) =
-# #           if err != nil :
-# #             console.log("Error: ", err)
-# #           if info != nil :
-# #             console.log("INFO: ", info))
-
-
 proc createDB*(name: string, options: PouchOptions): PouchDB =
   result = newPouchDB(cstring(name), optToJs(options))
 
 proc createDB*(name: string): PouchDB =
   result = newPouchDB(cstring(name))
+
+proc destroyDB*(db: PouchDB) =
+  echo "Entering destroyDB"
+  let resp = db.destroy() #.then()
+  console.log(resp)
+  
