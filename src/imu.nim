@@ -1,7 +1,14 @@
 
 import vdom, karax, karaxdsl, kajax 
 
-import sugar, json
+import sugar, json, strutils, macros, jsffi, async, tables
+
+import db
+
+var console {. importc, nodecl .}: JsObject
+
+var myDB = createDB("myDB", {"adapter":"idb"}.toTable)
+myDB.info().then(proc(r: JsObject ) = console.log("DB_Info:", r))
 
 proc navigation(): VNode =
   result = buildHtml(nav(class="navbar navbar-expand-lg navbar-light bg-light")):
@@ -21,6 +28,7 @@ proc MainContainer(): VNode =
 
 
 proc createDOM(data: RouterData): VNode =
+  
   result = buildHtml(tdiv()):
     MainContainer()
 
