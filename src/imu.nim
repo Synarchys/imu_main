@@ -7,7 +7,7 @@ import db
 
 var console {. importc, nodecl .}: JsObject
 
-var myDB = createDB("myDB", {"adapter":"idb"}.toTable)
+var myDB = createDB("myDB", PouchOptions(adapter:"idb"))
 myDB.info().then(proc(r: JsObject ) = console.log("DB_Info:", r))
 
 proc navigation(): VNode =
