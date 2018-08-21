@@ -14,7 +14,8 @@ type
     username*: string
     password*: string
     skip_setup*: bool
-
+  PouchCB* = proc(err, resp: JsObject)
+  
 var console {. importc, nodecl .}: JsObject
 
 proc optTojs(o: PouchOptions): JsObject =
@@ -23,15 +24,15 @@ proc optTojs(o: PouchOptions): JsObject =
   result.auto_compaction = o.auto_compaction
   if o.revs_limit == 0:
     result.revs_limit = 1000
-  if o.name != nil:
+  if o.name != "":
     result.name = cstring(o.name)
-  if o.adapter != nil:
+  if o.adapter != "":
     result.adapter = cstring(o.adapter)
-  if o.deterministic_revs != nil:
+  if o.deterministic_revs != "":
     result.deterministic_revs = cstring(o.deterministic_revs)
-  if o.username != nil:
+  if o.username != "":
     result.auth.username = cstring(o.username)
-  if o.password != nil:
+  if o.password != "":
     result.auth.password = cstring(o.password)
 
   
@@ -47,5 +48,6 @@ proc createDB*(name: string): PouchDB =
 proc destroyDB*(db: PouchDB) =
   echo "Entering destroyDB"
   let resp = db.destroy() #.then()
+  resp.then(proc(r:JsObject) = console.log(r)) 
   console.log(resp)
   
