@@ -7,9 +7,8 @@ import sugar, json, strutils, macros, jsffi, async, tables
 import db
 
 var console {. importc, nodecl .}: JsObject
-var options = newJsObject()
-options["adapter"] = "idb"
-var myDB {.exportc.} = createDB("myDB")
+
+var myDB {.exportc.} = createDB("myDB", PouchOptions(adapter:"idb"))
 myDB.info().then(proc(r: JsObject ) = console.log("DB_Info:", r))
 
 myDB.destroyDB()
