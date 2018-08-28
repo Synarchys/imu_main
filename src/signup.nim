@@ -116,14 +116,14 @@ proc singUpForm*(): VNode =
 # -H 'Content-Type:application/x-www-form-urlencoded' \
 # -d 'name=anna&password=secret'
 
-proc renderAlert(msg, desc: cstring): VNode =
-  # var alert = getVNodeById("loginAlert")
-  # alert.class = "alert alert-danger show"
-  # alert.text = desc
+# proc renderAlert(msg, desc: cstring): VNode =
+#   # var alert = getVNodeById("loginAlert")
+#   # alert.class = "alert alert-danger show"
+#   # alert.text = desc
   
-  result = buildHtml():
-    tdiv(id="loginAlert", class="alert alert-danger fade", role="alert"):
-      text desc #errors.getError(password)
+#   result = buildHtml():
+#     tdiv(id="loginAlert", class="alert alert-danger fade", role="alert"):
+#       text desc #errors.getError(password)
   
 
 proc login(ev: Event, n: VNode) =
@@ -140,7 +140,7 @@ proc login(ev: Event, n: VNode) =
              echo r
              if stat == 401:
                errors.setError("login", r["reason"].getStr)
-               renderAlert(r["error"].getStr, r["reason"].getStr)
+               #renderAlert(r["error"].getStr, r["reason"].getStr)
              else:
                echo resp
   )
@@ -160,4 +160,4 @@ proc loginForm*(): VNode =
       p:
         text "You are now logged in."
         
-    renderAlert()
+    
