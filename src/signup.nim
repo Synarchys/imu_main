@@ -109,48 +109,70 @@ proc singUpForm*(): VNode =
       loginField("Name :", username, "input", validateNotEmpty)
       loginField("Password: ", password, "password", validateNotEmpty)
       loginField("Verify: ", password, "verify", validateNotEmpty)    
-      button(onclick = singUp):
+      button(onclick = singUp, class="btn btn-dark"):
         text "Submit"
 
 # curl -vX POST $HOST/_session \
 # -H 'Content-Type:application/x-www-form-urlencoded' \
 # -d 'name=anna&password=secret'
+proc renderAlert(msg, desc: cstring) =
+  var alert = getVNodeById("loginAlert")
+  alert.class = "alert alert-danger show"
+  alert.text = desc
+  # markDirty(alert)
+  # redraw()
+  # result = buildHtml():
+  #   tdiv(id="loginAlert", class="alert alert-danger fade", role="alert"):
+  #     text desc #errors.getError(password)
+  
 
-# proc renderAlert(msg, desc: cstring): VNode =
-#   # var alert = getVNodeById("loginAlert")
-#   # alert.class = "alert alert-danger show"
-#   # alert.text = desc
-  
-#   result = buildHtml():
-#     tdiv(id="loginAlert", class="alert alert-danger fade", role="alert"):
-#       text desc #errors.getError(password)
-  
+# proc login(ev: Event, n: VNode)  =
+#   ev.preventDefault()
+#   let
+#     user = $getVNodeById("username").value()
+#     pass = $getVNodeById("password").value()
+#     url = HOST & "/_session"
+#     data = "name=" & user & "&password=" & pass
 
-proc login(ev: Event, n: VNode) =
-  ev.preventDefault()
-  let
-    user = $getVNodeById("username").value()
-    pass = $getVNodeById("password").value()
-    url = HOST & "/_session"
-    data = "name=" & user & "&password=" & pass
-  ajaxPost(url, [(cstring"Content-Type", cstring"application/x-www-form-urlencoded")],
-           data=data,
-           proc(stat:int, resp:cstring) =
-             let r = parseJson($resp)
-             echo r
-             if stat == 401:
-               errors.setError("login", r["reason"].getStr)
-               #renderAlert(r["error"].getStr, r["reason"].getStr)
-             else:
-               echo resp
-  )
-  
+#   ajaxPost(url, [(cstring"Content-Type", cstring"application/x-www-form-urlencoded")],
+#            data=data,
+#            proc(stat:int, resp:cstring) =
+#              let r = parseJson($resp)
+#              echo r
+#              if stat == 401:
+#                errors.setError("login", r["reason"].getStr)
+#              else:
+#                echo resp
+#   )
+
+type
+  Alert = ref object of VComponent
+    
+var counter = 0
+proc render(x: VComponent): VNode =  
+  let self = x
+  buildHtml(tdiv()):
+    button(class="btn btn-dark",
+           onclick = proc(ev: Event, n:VNode) =
+             inc counter
+             echo "counter " & $counter
+             markDirty(self)
+             redraw()
+    ):
+      text "Hitme"
+      
 proc loginForm*(): VNode =
+  let alert = newComponent(Alert, render)
   result = buildHtml(tdiv(class="input-group mb-3")):
     if not loggedIn:
       loginField("Name :", username, "input-group-text", validateNotEmpty)
       loginField("Password: ", password, "input-group-text", validateNotEmpty)
-      button(onclick=login, class="btn btn-dark"):
+      button(class="btn btn-dark",
+             onclick= proc() =
+               echo "--- click ---"
+               alert.text = "new error mesg"
+               markDirty(alert)
+               redraw()):
         text "Login"
       p:
         text errors.getError(username)
@@ -159,5 +181,5 @@ proc loginForm*(): VNode =
     else:
       p:
         text "You are now logged in."
-        
-    
+    alert
+  
