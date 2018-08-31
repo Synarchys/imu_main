@@ -123,39 +123,42 @@ var
   alertClass = "alert alert-success fade"
   alertText = ""
 
-proc render(x: VComponent): VNode =  
+
+proc loginAction(x: VComponent) =
   let self = x     
+  let
+    user = $getVNodeById("username").value()
+    pass = $getVNodeById("password").value()
+    url = HOST & "/_session"
+    data = "name=" & user & "&password=" & pass
+    
+  ajaxPost(url, [(cstring"Content-Type", cstring"application/x-www-form-urlencoded")],
+           data=data,
+           proc(stat:int, resp:cstring) =
+             # TODO: add timer to hide alert message
+             let r = parseJson($resp)
+             if stat == 401:
+               errors.setError("login", r["reason"].getStr)
+               alertClass = "alert alert-danger show"
+               alertText = r["error"].getStr & " - " & r["reason"].getStr
+             else:
+               alertClass = "alert alert-success show"
+               echo $resp
+               alertText = "Success!"
+               
+             markDirty(self)
+             redraw()
+  )
+  
+proc render(x: VComponent): VNode =  
   result = buildHtml(tdiv(class="input-group mb-3")):
     if not loggedIn:
       tdiv(class=alertClass, role="alert"):
-        text alerttext
+        text alertText
       loginField("Name :", username, "input-group-text", validateNotEmpty)
       loginField("Password: ", password, "input-group-text", validateNotEmpty)
       button(class="btn btn-dark",
-             onclick = proc() =
-               let
-                 user = $getVNodeById("username").value()
-                 pass = $getVNodeById("password").value()
-                 url = HOST & "/_session"
-                 data = "name=" & user & "&password=" & pass
-                 
-               ajaxPost(url, [(cstring"Content-Type", cstring"application/x-www-form-urlencoded")],
-                       data=data,
-                       proc(stat:int, resp:cstring) =
-                         # TODO: add timer to hide alert message
-                         let r = parseJson($resp)
-                         if stat == 401:
-                           errors.setError("login", r["reason"].getStr)
-                           alertClass = "alert alert-danger show"
-                           alertText = r["error"].getStr & " - " & r["reason"].getStr
-                         else:
-                           alertClass = "alert alert-success show"
-                           echo $resp
-                           alertText = "Success!"
-                           
-                         markDirty(self)
-                         redraw()
-                 )):
+             onclick = () => loginAction(x)):
         text "Login"
       p:
         text errors.getError(username)
