@@ -144,7 +144,6 @@ proc render(x: VComponent): VNode =
                        proc(stat:int, resp:cstring) =
                          # TODO: add timer to hide alert message
                          let r = parseJson($resp)
-                         echo resp
                          if stat == 401:
                            errors.setError("login", r["reason"].getStr)
                            alertClass = "alert alert-danger show"
@@ -153,9 +152,10 @@ proc render(x: VComponent): VNode =
                            alertClass = "alert alert-success show"
                            echo $resp
                            alertText = "Success!"
-                 )
-               markDirty(self)
-               redraw()):
+                           
+                         markDirty(self)
+                         redraw()
+                 )):
         text "Login"
       p:
         text errors.getError(username)
