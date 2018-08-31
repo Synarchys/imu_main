@@ -1,17 +1,4 @@
 
-## Synarchys initialization, first contact.
-## This app will create the user in couchdb, using this database
-## as identity repository.
-## This app will also create the email for the user, and the rest
-## of the environments that each user needs (private, public, shared ?)
-
-# TODO: nim client to couchdb rest api for authentication.
-# TODO: nim rest server for the Login client.
-# TODO: karax client login.
-
-# couch rest client
-# move to a separate file.
-
 import json, sequtils
 import dom except Event
 include karax / prelude
@@ -21,7 +8,7 @@ import karax / [vdom, karax, karaxdsl, jstrutils, compact, localstorage]
 
 from sugar import `=>`
 
-# some consts in order to prevent typos:
+
 const
   username = kstring"username"
   password = kstring"password"
@@ -35,18 +22,6 @@ var loggedIn: bool
 #      -H "X-CouchDB-WWW-Authenticate: Cookie" \
 #      -H "Content-Type:application/x-www-form-urlencoded"
   
-# Create database: curl -X PUT $HOST/{dbname}
-
-# Create admin user
-# curl -X PUT $HOST/_node/$NODENAME/_config/admins/anna -d '"secret"'
-
-# <div class="input-group mb-3">
-#   <div class="input-group-prepend">
-#     <span class="input-group-text" id="basic-addon1">@</span>
-#   </div>
-#   <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
-# </div>
-
 proc loginField(desc, field, class: kstring;
                 validator: proc (field: kstring): proc ()): VNode =
   var inputType = ""
@@ -112,17 +87,12 @@ proc singUpForm*(): VNode =
       button(onclick = singUp, class="btn btn-dark"):
         text "Submit"
 
-# curl -vX POST $HOST/_session \
-# -H 'Content-Type:application/x-www-form-urlencoded' \
-# -d 'name=anna&password=secret'
-
 type
   LoginForm = ref object of VComponent
     
 var
   alertClass = "alert alert-success fade"
   alertText = ""
-
 
 proc loginAction(x: VComponent) =
   let self = x     
@@ -131,7 +101,10 @@ proc loginAction(x: VComponent) =
     pass = $getVNodeById("password").value()
     url = HOST & "/_session"
     data = "name=" & user & "&password=" & pass
-    
+
+  # curl -vX POST $HOST/_session \
+  # -H 'Content-Type:application/x-www-form-urlencoded' \
+  # -d 'name=anna&password=secret'    
   ajaxPost(url, [(cstring"Content-Type", cstring"application/x-www-form-urlencoded")],
            data=data,
            proc(stat:int, resp:cstring) =
@@ -152,22 +125,14 @@ proc loginAction(x: VComponent) =
   
 proc render(x: VComponent): VNode =  
   result = buildHtml(tdiv(class="input-group mb-3")):
-    if not loggedIn:
-      tdiv(class=alertClass, role="alert"):
-        text alertText
-      loginField("Name :", username, "input-group-text", validateNotEmpty)
-      loginField("Password: ", password, "input-group-text", validateNotEmpty)
-      button(class="btn btn-dark",
-             onclick = () => loginAction(x)):
+    tdiv(class=alertClass, role="alert"):
+      text alertText
+    loginField("Name :", username, "input-group-text", validateNotEmpty)
+    loginField("Password: ", password, "input-group-text", validateNotEmpty)
+    button(class="btn btn-dark",
+           onclick = () => loginAction(x)):
         text "Login"
-      p:
-        text errors.getError(username)
-      p:
-        text errors.getError(password)
-    else:
-      p:
-        text "You are now logged in."
-        
+
 proc loginForm*(): VNode =
   result = buildHtml():
     newComponent(LoginForm, render)
