@@ -1,5 +1,5 @@
 
-import json, sequtils
+import strutils, json, sequtils
 import dom except Event
 include karax / prelude
 
@@ -8,22 +8,45 @@ import karax / [vdom, karax, karaxdsl, jstrutils, compact, localstorage]
 
 from sugar import `=>`
 
-
 const
   username = kstring"username"
   password = kstring"password"
   verify = kstring"password"
   HOST = "http://local.imu.ai:24042/couchdb"
+  loginUrl = HOST & "/_session"
+  signUrl = HOST & "/_users/org.couchdb.user:"
+
+# Style Consts
+const
+  btnClass = "btn btn-dark"
+  alertDangerClass = "alert alert-danger"
+  alertDangerShowClass = alertDangerClass & " show"
+  alertDangerFadeClass = alertDangerClass & " fade"
+  alertSuccess = "alert alert-success show"
+  alertSuccessShow = alertSuccess & " show"
+  alertSuccessFade = alertSuccess & " fade"
   
-var loggedIn: bool
+type
+  AppState = ref object
+    statusCode*: int # default code, 
+    response*: JsonNode
+      
+var
+  appState = AppState(statusCode: 0) 
+  alertClass = "alert alert-success fade"
+  alertText = ""
 
 # curl -vX PUT $HOST/mydatabase \
 #      --cookie AuthSession=YW5uYTo0QUIzOTdFQjrC4ipN-D-53hw1sJepVzcVxnriEw \
 #      -H "X-CouchDB-WWW-Authenticate: Cookie" \
 #      -H "Content-Type:application/x-www-form-urlencoded"
   
-proc loginField(desc, field, class: kstring;
-                validator: proc (field: kstring): proc ()): VNode =
+# Create database: curl -X PUT $HOST/{dbname}
+
+# Create admin user
+# curl -X PUT $HOST/_node/$NODENAME/_config/admins/anna -d '"secret"'
+proc loginField(desc, field, class: kstring; validator: proc (field: kstring): proc (),
+               onkeyup:proc(ev: Event, n: VNode)=nil): VNode =
   var inputType = ""
   if field == "password" or field == "verify":
     inputType = "password"
@@ -40,7 +63,8 @@ proc loginField(desc, field, class: kstring;
           placeholder=field,
           aria-label=field,
           aria-describedby="basic-addon1",
-          onchange=validator(field))
+          onchange=validator(field),
+          onkeyup=onkeyup)
         
 proc validateNotEmpty(field: kstring): proc () =
   result = proc () =
@@ -50,89 +74,73 @@ proc validateNotEmpty(field: kstring): proc () =
     else:
       errors.setError(field, "")
       
-proc singUp(ev: Event, n: VNode) =
+proc singUpAction(ev: Event, n: VNode) =
   ev.preventDefault()
   let
     username = $getVNodeById("username").value()
     password = getVNodeById("password")
-    verify = getVNodeById("verify")
-    url = HOST & "/_users/org.couchdb.user:" & username
-
+    verify = getVNodeById("verify")    
   # TODO: validate password == verify
   let u = %*{"name": username,
               "password": $password.value(),
-              "roles": [], "type": "user"}
-  
-  let body = cstring($u)
+              "roles": [], "type": "user"}  
+  let
+    url = signUrl & username
+    body = cstring($u)
   ajaxPut(url ,@[],  cstring($u),
           proc(stat:int, resp:cstring) =
+            appState.statusCode = stat
+            appState.response = parseJson($resp)
             let r = parseJson($resp)
-            if stat == 201:
-              # success
-              # {"ok":true,"id":"org.couchdb.user:demian","rev":"7-8ca091452eba898db2d06a7f3d09252a"}
-              echo "user created!!"
-            else:
-              # show Error
-              # {"error":"conflict","reason":"Document update conflict."}
-              echo "error :("
-            echo(resp)
   )
+
+# curl -vX POST $HOST/_session \
+# -H 'Content-Type:application/x-www-form-urlencoded' \
+# -d 'name=anna&password=secret'
+proc loginAction() =
+  let
+    user = $getVNodeById("username").value()
+    pass = $getVNodeById("password").value()
+    data = "name=" & user & "&password=" & pass  
+  ajaxPost(loginUrl, [(cstring"Content-Type", cstring"application/x-www-form-urlencoded")],
+           data=data,
+           proc(stat:int, resp:cstring) =
+             appState.statusCode = stat
+             appState.response = parseJson($resp))
+
+proc Alert: VNode =
+  # TODO: add timer to hide alert message
+  if appState.statusCode == 401:
+    let r = appState.response
+    errors.setError("login", r["reason"].getStr)  
+    alertText = r["error"].getStr & " - " & r["reason"].getStr
+    alertClass = alertDangerShowClass
+  elif appState.statusCode == 200:
+    alertClass = alertSuccessShow
+    alertText = "Logged in."
+  result = buildHtml():
+    tdiv(class=alertClass, role="alert"):
+      text alertText
 
 proc singUpForm*(): VNode =
   result = buildHtml(tdiv):
+    Alert()
     form(id="signup-form"):
       loginField("Name :", username, "input", validateNotEmpty)
       loginField("Password: ", password, "password", validateNotEmpty)
       loginField("Verify: ", password, "verify", validateNotEmpty)    
-      button(onclick = singUp, class="btn btn-dark"):
+      button(class=btnClass, onclick = singUpAction):
         text "Submit"
-
-type
-  LoginForm = ref object of VComponent
-    
-var
-  alertClass = "alert alert-success fade"
-  alertText = ""
-
-proc loginAction(x: VComponent) =
-  let self = x     
-  let
-    user = $getVNodeById("username").value()
-    pass = $getVNodeById("password").value()
-    url = HOST & "/_session"
-    data = "name=" & user & "&password=" & pass
-
-  # curl -vX POST $HOST/_session \
-  # -H 'Content-Type:application/x-www-form-urlencoded' \
-  # -d 'name=anna&password=secret'    
-  ajaxPost(url, [(cstring"Content-Type", cstring"application/x-www-form-urlencoded")],
-           data=data,
-           proc(stat:int, resp:cstring) =
-             # TODO: add timer to hide alert message
-             let r = parseJson($resp)
-             if stat == 401:
-               errors.setError("login", r["reason"].getStr)
-               alertClass = "alert alert-danger show"
-               alertText = r["error"].getStr & " - " & r["reason"].getStr
-             else:
-               alertClass = "alert alert-success show"
-               echo $resp
-               alertText = "Success!"
-               
-             markDirty(self)
-             redraw()
-  )
-  
-proc render(x: VComponent): VNode =  
+      
+proc loginForm*(): VNode =
   result = buildHtml(tdiv(class="input-group mb-3")):
-    tdiv(class=alertClass, role="alert"):
-      text alertText
+    Alert()
     loginField("Name :", username, "input-group-text", validateNotEmpty)
-    loginField("Password: ", password, "input-group-text", validateNotEmpty)
-    button(class="btn btn-dark",
-           onclick = () => loginAction(x)):
+    loginField("Password: ", password, "input-group-text",
+               validateNotEmpty,
+               proc(ev: Event, n: VNode) =
+                 if cast[KeyboardEvent](ev).keyCode == 13:
+                   loginAction())
+    button(class="btn btn-dark", onclick = loginAction):
         text "Login"
 
-proc loginForm*(): VNode =
-  result = buildHtml():
-    newComponent(LoginForm, render)
