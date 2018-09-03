@@ -43,6 +43,7 @@ var
   
 # Create database: curl -X PUT $HOST/{dbname}
 
+  
 # Create admin user
 # curl -X PUT $HOST/_node/$NODENAME/_config/admins/anna -d '"secret"'
 proc loginField(desc, field, class: kstring; validator: proc (field: kstring): proc (),
@@ -52,19 +53,24 @@ proc loginField(desc, field, class: kstring; validator: proc (field: kstring): p
     inputType = "password"
   else:
     inputType = "text"
-  
-  result = buildHtml(tdiv(class="input-group mb-3")):
-    tdiv(class="input-group-prepend"):
-      span(class="input-group-text", id="lbl_"&field):
-        text desc
+
+  var inputText = buildHtml():
     input(`type`=inputType,
           id=field,
           class="form-control",
           placeholder=field,
           aria-label=field,
           aria-describedby="basic-addon1",
-          onchange=validator(field),
-          onkeyup=onkeyup)
+          onchange=validator(field))
+
+  if onkeyup != nil:
+    inputText.addEventHandler(EventKind.onkeyup, onkeyup)
+  
+  result = buildHtml(tdiv(class="input-group mb-3")):
+    tdiv(class="input-group-prepend"):
+      span(class="input-group-text", id="lbl_"&field):
+        text desc
+    inputText
         
 proc validateNotEmpty(field: kstring): proc () =
   result = proc () =
@@ -143,4 +149,3 @@ proc loginForm*(): VNode =
                    loginAction())
     button(class="btn btn-dark", onclick = loginAction):
         text "Login"
-
