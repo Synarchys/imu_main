@@ -3,9 +3,10 @@ include karax / prelude
 import karax / prelude
 
 import signup
-#import navigation
+import navigation
 
 proc createDOM(data: RouterData): VNode =
+  echo data.hashPart
   result = buildHtml(tdiv(class="container")):
     tdiv(class="row"):
       tdiv(class="col-sm"):
@@ -14,12 +15,13 @@ proc createDOM(data: RouterData): VNode =
       tdiv(class="col-sm"):
         a(href = "#/signup"):
           text "signup"
-      
-    if data.hashPart == "":
-      loginForm()
-    elif data.hashPart == "#/signup":
-      singUpForm()
-    #   Navigation()
+    case $(data.hashPart):
+      of "":
+        loginForm()
+      of "#/signup":
+        singUpForm()
+      of "#/contents":
+        Navigation()
     
 
 setRenderer createDOM

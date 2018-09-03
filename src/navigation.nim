@@ -2,14 +2,17 @@ include karax / prelude
 import karax / prelude
 
 
-import sugar, json, strutils, macros, jsffi, async, tables
+import json, strutils, macros, jsffi, async, tables
+
+from sugar import `=>`, `->`
 
 import db
 
+
 var console {. importc, nodecl .}: JsObject
 
-var myDB {.exportc.} = createDB("myDB", PouchOptions(adapter:"idb"))
-myDB.info().then(proc(r: JsObject ) = console.log("DB_Info:", r))
+var myDB {.exportc.} = createDB("myDB")
+myDB.info().then((r: JsObject ) => console.log("DB_Info:", r))
 
 myDB.destroyDB()
 #console.log(resp)
