@@ -14,8 +14,8 @@ var console {. importc, nodecl .}: JsObject
 var myDB {.exportc.} = createDB("myDB")
 myDB.info().then((r: JsObject ) => console.log("DB_Info:", r))
 
-myDB.destroyDB()
-#console.log(resp)
+# myDB.destroyDB()
+# console.log(resp)
 
 proc navigation(): VNode =
   result = buildHtml(nav(class="navbar navbar-expand-lg navbar-light bg-light")):
