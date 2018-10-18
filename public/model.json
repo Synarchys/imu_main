@@ -1,0 +1,36 @@
+{
+  "name": "identity",
+  "title": "Identity",
+  "fields": [
+    {
+      "name": "name",
+      "label": "Name",
+      "type": "string",
+      "hint": "Insert your name here"
+    },
+    {
+      "name": "previous_name",
+      "label": "Previous name",
+      "type": "string",
+      "hint": ""
+    },
+    {
+      "name": "address",
+      "label": "Address",
+      "type": "string",
+      "hint": "Insert your address here"
+    },
+    {
+      "name": "phone",
+      "label": "Phone Number",      
+      "type": "string",
+      "hint": "Insert your phone number here"
+    },
+    {
+      "name": "email",
+      "label": "Email Address",      
+      "type": "string",
+      "hint": "Insert your email address here"
+    }
+  ]
+}

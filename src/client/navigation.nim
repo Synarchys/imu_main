@@ -1,13 +1,11 @@
+#
 include karax / prelude 
 import karax / prelude
 
 
-import json, strutils, macros, jsffi, async, tables
+import json, strutils, jsffi, tables
 
 from sugar import `=>`, `->`
-
-import db
-
 
 proc navigation(): VNode =
   result = buildHtml(nav(class="navbar navbar-expand-lg navbar-light bg-light")):
@@ -24,4 +22,5 @@ proc Navigation*(): VNode =
     navigation()
     for i in 1..20:
       content()
+
 
