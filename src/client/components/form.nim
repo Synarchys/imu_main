@@ -5,19 +5,9 @@ import karax / [errors, kdom, kajax, vstyles]
 
 import sugar, jsffi, json, uuidjs
 
+import ../model/identity
+
 var console {. importc, nodecl .}: JsObject
-
-const headers = [(cstring"Content-Type", cstring"application/json")]
-
-var model: JsonNode
-
-proc loadData() =
-  ajaxGet("../model.json",
-          headers,
-          proc(stat:int, resp:cstring) =
-            model = parseJson($resp)
-            console.log(resp)
-  )
 
 proc field(def: JsonNode): VNode =
   let name = def.getOrDefault("name").getStr()
@@ -33,11 +23,16 @@ proc field(def: JsonNode): VNode =
       input(`type`=ftype, class="form-control",id = iid, aria-describedby=hid)
       small( id=hid, class="form-text text-muted"): text(hint)
       
-  
+var model: JsonNode = getDefinition()
+
 proc Form*():VNode =
   if model == nil:
-    loadData()
+    model = getDefinition()
+#  else:
+#    console.log($model)
+
   result = buildHtml(tdiv()):
+    text "Identity"
     if model != nil :
       h1: text model.getOrDefault("title").getStr()
       if model.contains("fields") and model["fields"].len > 0:
