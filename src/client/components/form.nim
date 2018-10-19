@@ -1,7 +1,6 @@
 #
 include karax / prelude 
 import karax / prelude
-import karax / [errors, kdom, kajax, vstyles]
 
 import sugar, jsffi, json, uuidjs
 
@@ -23,13 +22,18 @@ proc field(def: JsonNode): VNode =
       input(`type`=ftype, class="form-control",id = iid, aria-describedby=hid)
       small( id=hid, class="form-text text-muted"): text(hint)
       
-var model: JsonNode = getDefinition()
+var model: JsonNode
 
 proc Form*():VNode =
   if model == nil:
-    model = getDefinition()
-#  else:
-#    console.log($model)
+    getDefinition(proc(r: JsonNode)=
+        echo "now in callback"
+        echo $r
+        model = r
+        kxi.redraw()
+    )
+  else:
+    console.log($model)
 
   result = buildHtml(tdiv()):
     text "Identity"
