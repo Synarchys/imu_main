@@ -16,11 +16,18 @@ proc load_def(cb: proc(r: JsonNode)) =
           proc(stat:int, resp:cstring) =
             identity_def = parseJson($resp)
             cb(identity_def)
-            console.log(resp)
+            #console.log(resp)
   )
 
   
 proc getDefinition*(cb: proc(r: JsonNode)) =
   load_def(cb)
-  #cb(identity_def)
+
+proc update(d: JsonNode) =
+  discard
+  
+proc save*(d: JsonNode, cb: proc(r: JsonNode)) =
+  let r = %*{"message": "saved"}
+  cb(r)
+
 
