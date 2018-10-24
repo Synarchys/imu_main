@@ -9,6 +9,11 @@ import ../model/identity
 var console {. importc, nodecl .}: JsObject
 var data = %*{"id": genUUID()}
 
+proc changeData(r: JsonNode) =
+  echo "changed data"
+  echo $r
+  
+let subsc = iden_flow.subscribe(changeData)
              
 proc field(def: JsonNode): VNode =
   let name = def.getOrDefault("name").getStr()
@@ -44,7 +49,10 @@ proc Form*():VNode =
 #    console.log($model)
   proc click() =
     console.log("click: ", $data)
+    iden_flow.send(data, proc(r:JsonNode) = discard)
+    data["fields"] = newJObject()
     kxi.redraw()
+
   result = buildHtml(tdiv()):
     text "Identity"
     if model != nil :

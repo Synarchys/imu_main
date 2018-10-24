@@ -3,7 +3,7 @@ import jsonflow, uuidjs
 import jsffi, json
 
 import requestjs
- 
+export jsonflow 
 var console {. importc, nodecl .}: JsObject
 var identity_def: JsonNode
 
@@ -23,11 +23,10 @@ proc load_def(cb: proc(r: JsonNode)) =
 proc getDefinition*(cb: proc(r: JsonNode)) =
   load_def(cb)
 
-proc update(d: JsonNode) =
-  discard
-  
-proc save*(d: JsonNode, cb: proc(r: JsonNode)) =
-  let r = %*{"message": "saved"}
-  cb(r)
+proc callApi(r:JsonNode) =
+  echo "something has changed, replicate data. \n=========="
+  echo $r
+  echo "=============="
 
 
+discard iden_flow.subscribe(callApi)
