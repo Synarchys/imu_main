@@ -8,9 +8,11 @@ import ../model/identity
 
 var console {. importc, nodecl .}: JsObject
 var data = %*{"id": genUUID()}
+var model: JsonNode
 
 proc changeData(r: JsonNode) =
   echo "changed data"
+  
   echo $r
   
 let subsc = iden_flow.subscribe(changeData)
@@ -33,7 +35,6 @@ proc field(def: JsonNode): VNode =
       input(`type`=ftype, class="form-control",id = iid, aria-describedby=hid, value=contents, onChange=change, value = value)
       small( id=hid, class="form-text text-muted"): text(hint)
       
-var model: JsonNode
 
 proc Form*():VNode =
   if model == nil:

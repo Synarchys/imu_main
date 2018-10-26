@@ -16,6 +16,8 @@ proc load_def(cb: proc(r: JsonNode)) =
           proc(stat:int, resp:cstring) =
             identity_def = parseJson($resp)
             cb(identity_def)
+            echo "about to send"
+            iden_flow.send(%*{"id": "asd","model_definition": identity_def})
             #console.log(resp)
   )
 
@@ -27,6 +29,5 @@ proc callApi(r:JsonNode) =
   echo "something has changed, replicate data. \n=========="
   echo $r
   echo "=============="
-
 
 discard iden_flow.subscribe(callApi)
